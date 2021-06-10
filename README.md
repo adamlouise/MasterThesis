@@ -12,7 +12,7 @@ J'ai mis en *italique* les codes qui je pense t'intéresseront le plus pour l'ar
 
 - DecisionTrees.py: (purement) RF & GB
 
-- ES.py: Exhaustive search
+- M1.py: Exhaustive search (je changerais bien le nom - qui est assez perturbant - mais une fois que le fichier est chargé sur github je n'arrive pas à l'enlever ou à le renommer)
     - résolution du exhaustive search (avec true/estimated orientations en fonction de la ligne 155/156)
 
 
