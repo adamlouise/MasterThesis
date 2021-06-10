@@ -17,7 +17,7 @@ J'ai mis en *italique* les codes qui je pense t'intéresseront le plus pour l'ar
 
 
 ### Classes: 
-uniquement utilisées pour load les modèles dans les codes de comparaison, une copie est aussi présente directement dans les codes ici au dessus (--> encore à changer)
+uniquement utilisées pour load les modèles dans les codes de comparaison, une copie est aussi présente directement dans les codes ici au dessus (--> encore à changer). Normalement ces 2 fichiers sont dans un folder "Classes", mais sur github je n'arrive pas à faire de folder.
 
 - Net1_Class.py: classe correspondant au Network1
 - Net2_Class.py: classe correspondant au Network2
