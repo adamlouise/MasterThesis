@@ -50,7 +50,7 @@ save_params = False
 save_scaler = False
 save_res = False
 save_net = False
-TESTNUM = '9_6'
+TESTNUM = '13_6'
 
 
 num_div = num_sample/6
@@ -62,8 +62,8 @@ num_valid = int(num_test + num_div)
 params1 = {
     #Training parameters
     "num_samples": num_sample,
-     "batch_size": 5000,  #2500
-     "num_epochs": 35,
+     "batch_size": 20000,  #5000
+     "num_epochs": 5,
      
      #NW2
      "num_h1": 300,
@@ -161,6 +161,9 @@ target_valid = torch.transpose(target_valid, 0, 1)
 
 # %% Building the network
 
+global tsne
+tsne=100
+
 class Net1(nn.Module):
 
     def __init__(self, num_in, num_h1, num_h2, num_h3, num_h4, num_h5, num_out, drop_prob):
@@ -197,23 +200,34 @@ class Net1(nn.Module):
 
         x = F.linear(x, self.W_1, self.b_1)
         x = self.activation(x)
+        if tsne == 1:
+            print('ok - layer 1')
+            return x
         x = self.dropout(x)
 
         x = F.linear(x, self.W_2, self.b_2)
         #x = self.l1_bn(x)
         x = self.activation(x)
+        if tsne == 2:
+            return x
         x = self.dropout(x)
         
         x = F.linear(x, self.W_3, self.b_3)
         x = self.activation(x)
+        if tsne == 3:
+            return x
         x = self.dropout(x)
         
         x = F.linear(x, self.W_4, self.b_4)
         x = self.activation(x)
+        if tsne == 4:
+            return x
         x = self.dropout(x)
         
         x = F.linear(x, self.W_5, self.b_5)
         x = self.activation(x)
+        if tsne == 5:
+            return x
         x = self.dropout(x)
         
         x = F.linear(x, self.W_6, self.b_6)
@@ -323,6 +337,18 @@ def train_network1(params1: dict):
         print("time", t)
         
     to_min = sum(valid_acc_cur)
+    
+    # tsne:
+    weights = np.zeros((num_sample, 2))
+    if epoch%7==0:
+        W_1 = net1.W_1
+        W_2 = net1.W_2
+        W_3 = net1.W_3
+        W_4 = net1.W_4
+        W_5 = net1.W_5
+        W_6 = net1.W_6
+        
+        
       
     return {"loss": to_min, 
             "model": net1, 
@@ -351,6 +377,82 @@ if save_net:
     net = trial['model']
     torch.save(net.state_dict(), PATH)
     
+#%% Access weights
+net1 = trial['model']
+W_1 = net1.W_1.detach().numpy()
+W_2 = net1.W_2
+W_3 = net1.W_3
+W_4 = net1.W_4
+W_5 = net1.W_5
+W_6 = net1.W_6.detach().numpy()
+#plt.plot(range(len(W_1)), W_1)
+#plt.plot(range(len(W_6)), W_6)
+
+filename = 'data_TEST3_article/DW_noisy_store_TEST4_gen_200_for_visu'
+y_data = pickle.load(open(filename, 'rb'))
+y_data = y_data/M0
+# small changes for nn
+y_data = np.transpose(y_data)
+y_data_n = torch.from_numpy(y_data)
+y_data_n = y_data_n.float()   
+print('ok noise')
+
+#%%
+
+# get 6 activation layers
+activations=[]
+for i in range(6): #6 = number of layers
+    tsne = i
+    output1 = net1(y_data_n)
+    output1 = output1.detach().numpy()
+    activations.append(output1)
+
+# %%Perform TSNE
+from sklearn.manifold import TSNE
+proj_acti = np.zeros((6,200,2))
+for i in range(6):
+    proj_acti[i,:,:] = TSNE(n_components=2,
+                     perplexity=20,  # 'random' or 'pca' for init
+                     init='pca').fit_transform(activations[i]) #n_samples x n_features
+
+# fig0, axs0 = plt.subplots(1, 2, sharey='row', sharex =True, figsize=(11,7))
+# fig0.suptitle('weights')
+# axs0[0].hist( W_1[2,:])
+
+# axs0[1].hist( W_6[2,:])
+# %% Visualisation
+import matplotlib.cm as cm
+#mksize = (np.array(ld_dic['rad'])*1e6)**2
+#mkcol = ld_dic['fvf']
+fig, ax = plt.subplots(nrows=6, ncols=1, figsize=(3, 18))
+for i in range(6):
+    for j in range(5):
+        scatax = ax[i].scatter(proj_acti[i, j*40:, 0], proj_acti[i, :, 1],
+                            edgecolors='k', 
+                            linewidth=0.25,
+                            #s=mksize,
+                            #c=mkcol, 
+                            cmap=cm.seismic)
+
+cbar = fig.colorbar(scatax)  # ticks=[0,0.5,1]
+#cbar.ax.set_title('Axon density\nindex', fontweight='bold')
+
+# cbar.ax.set_yticklabels(["Low","Medium","High"])
+
+
+# See
+# https://jakevdp.github.io/PythonDataScienceHandbook/04.06-customizing-legends.html
+# we'll plot empty lists with the desired size and label
+# for i in np.arange(0, len(mksize), len(mksize)//7):
+#     ax.scatter([], [], c='k', alpha=0.3, s=mksize[i],
+#                label='r={:g} '.format(ld_dic['rad'][i]) + "${\mu}m$")
+
+# ax.legend(scatterpoints=4, frameon=False, title='apparent radius index')
+
+# ax.set_title("Dictionary of %d hexagonal-packing configurations - "
+#              "t-SNE 2D visualization", fontweight='bold')
+# ax.set_xlabel("Embedding dimension 1", fontweight='bold')
+# ax.set_ylabel("Embedding dimension 2", fontweight='bold')
         
 #%% Graphs for Learning
 
