@@ -193,14 +193,15 @@ error0 = pickle.load(open(filename0, 'rb'))
 print(np.mean(error0,1))
 
 
-# if scaled:
-#     filename0_TrueOri = "error_M1_testdata_TEST2_TrueOrientations"
-# else:
-#     filename0_TrueOri = 'error_M1_testdata_TrueOrientations_%s' %n_test
+if scaled:
+    #filename0_TrueOri = "error_M1_testdata_TEST2_TrueOrientations"
+    filename0_TrueOri = 'data_TEST3_article/error_M1_testdata_TrueOrientations_%s' %n_test
+else:
+    filename0_TrueOri = 'error_M1_testdata_TrueOrientations_%s' %n_test
 
-# error0_TrueOri = pickle.load(open(filename0_TrueOri, 'rb'))
+error0_TrueOri = pickle.load(open(filename0_TrueOri, 'rb'))
 
-# print(np.mean(error0_TrueOri,1))
+print(np.mean(error0_TrueOri,1))
     
 #%% predictions
 
@@ -314,7 +315,7 @@ error2_0, error2_0_vec = compute_error_NN2(w_store_0)
 
 #exhaustive search
 tab_error0, prop_error0, prop_tot_error0 = reshape(error0.T, np.mean(error0, 0))
-#tab_error0_TrueOri, prop_error0_TrueOri, prop_tot_error0_TrueOri = reshape(error0_TrueOri.T, np.mean(error0_TrueOri, 0))
+tab_error0_TrueOri, prop_error0_TrueOri, prop_tot_error0_TrueOri = reshape(error0_TrueOri.T, np.mean(error0_TrueOri, 0))
 
 #methods
 tab_error1, prop_error1, prop_tot_error1 = reshape(error1, error1_vec)
@@ -398,13 +399,13 @@ nu_min = [0.5, 0.4, 0.3, 0.2, 0.1]
 SNR= [25, 50, 100]
 fig3, ax3 = plt.subplots(nrows=3, ncols=3, figsize=(12, 12))
 fig3.suptitle('Error of each property dependent on nu for different noise levels')
-prop =['nu', 'rad [micro m]', 'fin']
+prop =['nu', 'rad [micro m]', 'f']
 colors = ['grey','black', 'steelblue', 'olive', 'indianred']
-labels = ['ES', 'NNLS + DL', 'NNLS + DL *', 'DL']
+labels = ['ES*', 'ES', 'NNLS + DL', 'NNLS + DL *', 'DL']
 for i in range(3):
     for j in range(3): #prop
         
-        #ax3[j,i].plot(nu_min, (prop_error0_TrueOri[i,:,j]+prop_error0_TrueOri[i,:,j+3])/2, color= colors[0], marker='x')
+        ax3[j,i].plot(nu_min, (prop_error0_TrueOri[i,:,j]+prop_error0_TrueOri[i,:,j+3])/2, color= colors[0], marker='x')
         ax3[j,i].plot(nu_min, (prop_error0[i,:,j]+prop_error0[i,:,j+3])/2, color= colors[1], marker='x')
         
         ax3[j,i].plot(nu_min, (prop_error2[i,:,j]+prop_error2[i,:,j+3])/2, color= colors[2], marker='x')
@@ -423,7 +424,7 @@ for i in range(3):
             
         ax3[j,i].yaxis.grid(True)
         if j==1:
-            ax3[j,i].set_ylim(0, 0.0000015)
+            ax3[j,i].set_ylim(0, 0.0000017)
         else:    
             ax3[j,i].set_ylim(0, 0.25)
     
