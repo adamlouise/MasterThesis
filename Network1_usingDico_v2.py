@@ -62,8 +62,8 @@ num_valid = int(num_test + num_div)
 params1 = {
     #Training parameters
     "num_samples": num_sample,
-     "batch_size": 20000,  #5000
-     "num_epochs": 5,
+     "batch_size": 5000,  #5000
+     "num_epochs": 35,
      
      #NW2
      "num_h1": 300,
@@ -209,24 +209,28 @@ class Net1(nn.Module):
         #x = self.l1_bn(x)
         x = self.activation(x)
         if tsne == 2:
+            print('ok - layer 2')
             return x
         x = self.dropout(x)
         
         x = F.linear(x, self.W_3, self.b_3)
         x = self.activation(x)
         if tsne == 3:
+            print('ok - layer 3')
             return x
         x = self.dropout(x)
         
         x = F.linear(x, self.W_4, self.b_4)
         x = self.activation(x)
         if tsne == 4:
+            print('ok - layer 4')
             return x
         x = self.dropout(x)
         
         x = F.linear(x, self.W_5, self.b_5)
         x = self.activation(x)
         if tsne == 5:
+            print('ok - layer 5')
             return x
         x = self.dropout(x)
         
@@ -237,7 +241,9 @@ class Net1(nn.Module):
 # %% Building training loop
 
 def train_network1(params1: dict):
-
+    
+    tsne = 100
+    
     num_in = 552
     num_out = num_params
     num_h1 = params1["num_h1"]
@@ -337,18 +343,7 @@ def train_network1(params1: dict):
         print("time", t)
         
     to_min = sum(valid_acc_cur)
-    
-    # tsne:
-    weights = np.zeros((num_sample, 2))
-    if epoch%7==0:
-        W_1 = net1.W_1
-        W_2 = net1.W_2
-        W_3 = net1.W_3
-        W_4 = net1.W_4
-        W_5 = net1.W_5
-        W_6 = net1.W_6
-        
-        
+               
       
     return {"loss": to_min, 
             "model": net1, 
@@ -410,6 +405,8 @@ for i in range(6): #6 = number of layers
 # %%Perform TSNE
 from sklearn.manifold import TSNE
 proj_acti = np.zeros((6,200,2))
+size_layers = [300, 800, 1600, 800, 100, 6]
+perplexity = [20, 30, 40, 30, 10, 20]
 for i in range(6):
     proj_acti[i,:,:] = TSNE(n_components=2,
                      perplexity=20,  # 'random' or 'pca' for init
@@ -421,20 +418,31 @@ for i in range(6):
 
 # axs0[1].hist( W_6[2,:])
 # %% Visualisation
-import matplotlib.cm as cm
+#import matplotlib.cm as cm
 #mksize = (np.array(ld_dic['rad'])*1e6)**2
 #mkcol = ld_dic['fvf']
-fig, ax = plt.subplots(nrows=6, ncols=1, figsize=(3, 18))
+n_test = '13_6'
+fig, ax = plt.subplots(nrows=6, ncols=1, figsize=(6, 36))
+colors = ['red', 'gold', 'yellowgreen', 'mediumturquoise', 'royalblue']
+nu1 = [0.5, 0.4, 0.3, 0.2, 0.1]
 for i in range(6):
     for j in range(5):
-        scatax = ax[i].scatter(proj_acti[i, j*40:, 0], proj_acti[i, :, 1],
+        scatax = ax[i].scatter(proj_acti[i, j*40:(j+1)*40, 0], proj_acti[i, j*40:(j+1)*40, 1],
                             edgecolors='k', 
                             linewidth=0.25,
                             #s=mksize,
                             #c=mkcol, 
-                            cmap=cm.seismic)
-
-cbar = fig.colorbar(scatax)  # ticks=[0,0.5,1]
+                            #cmap=cm.seismic,
+                            color = colors[j]
+                            #label = 'nu1 = %s' %nu1[j]
+                            )
+        ax[i].set_title('activation at layer %s' % str(i+1))
+        ax[i].set_xlabel("Embedding dimension 1", fontweight='bold')
+        ax[i].set_ylabel("Embedding dimension 2", fontweight='bold')
+        
+fig.legend(nu1, loc=(0.8, 0.92))
+plt.savefig("graphs_ARTICLE/TSNE_%s.pdf" %n_test, dpi=150) 
+#cbar = fig.colorbar(scatax)  # ticks=[0,0.5,1]
 #cbar.ax.set_title('Axon density\nindex', fontweight='bold')
 
 # cbar.ax.set_yticklabels(["Low","Medium","High"])
@@ -447,7 +455,7 @@ cbar = fig.colorbar(scatax)  # ticks=[0,0.5,1]
 #     ax.scatter([], [], c='k', alpha=0.3, s=mksize[i],
 #                label='r={:g} '.format(ld_dic['rad'][i]) + "${\mu}m$")
 
-# ax.legend(scatterpoints=4, frameon=False, title='apparent radius index')
+#ax.legend(scatterpoints=4, frameon=False, title='apparent radius index')
 
 # ax.set_title("Dictionary of %d hexagonal-packing configurations - "
 #              "t-SNE 2D visualization", fontweight='bold')
